@@ -50,7 +50,7 @@ class KafkaMessageConsumer:
                 "isolation_level": "read_committed"  # Only read committed messages
             })
 
-        self.consumer = KafkaConsumer(topic, **consumer_config)
+        self.consumer = KafkaConsumer(**consumer_config)
         print(f"Consumer initialized for topic: {topic} with {delivery_semantics.value} semantics")
 
     def process_message(self, message: Dict[str, Any]) -> None:
@@ -60,12 +60,13 @@ class KafkaMessageConsumer:
         """
         print(f"Processing message: {message}")
 
-    def start_consuming(self) -> None:
+    def start_consuming(self,topic) -> None:
         """
         Start consuming messages from Kafka with the configured delivery semantics.
         """
         try:
-            print(f"Starting to consume messages from topic: {self.topic}")
+            print(f"Starting to consume messages from topic: {topic}")
+            self.consumer.subscribe(topic) # will this step overwrite what topic i am reading previously.
             for message in self.consumer:
                 try:
                     if self.delivery_semantics == DeliverySemantics.AT_MOST_ONCE:
@@ -99,16 +100,27 @@ class KafkaMessageConsumer:
             print("Consumer closed")
 
 
-if __name__ == "__main__":
-    # Example usage with different delivery semantics
-    consumer = KafkaMessageConsumer(
-        topic="your_topic",
-        bootstrap_servers="localhost:9092",
-        group_id="your_consumer_group",
-        delivery_semantics=DeliverySemantics.AT_LEAST_ONCE
-    )
-    consumer.start_consuming()
+# if __name__ == "__main__":
+#     # Example usage with different delivery semantics
+#     consumer = KafkaMessageConsumer(
+#         topic="your_topic",
+#         bootstrap_servers="localhost:9092",
+#         group_id="your_consumer_group",
+#         delivery_semantics=DeliverySemantics.AT_LEAST_ONCE
+#     )
+#     consumer.start_consuming()
     
 # thinks to look for:
 #   auto_offset_reset?
 #   enable_auto_commit
+
+
+## TODO: implement the way to read the kafka topic as consumer and the other way with the message streaming.
+## TODO: what metrics do you see for the kafka lag performance.
+## TODO: in kafka we might face the challenge and failure might come so how we perform the automatic retries and the idempotent mode.
+    ## the failure comes at the producer side  so how we will
+    ## the failure comes at the consumer side so how we will handle it.
+
+# how can you make the producer idempotent in kafka? how can you make the consumer idempotent in kafka?
+# difference between ISR and the replicated partitions.
+# how can you enable transactions in kafka?

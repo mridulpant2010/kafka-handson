@@ -9,7 +9,6 @@ class RateLimitedKafkaProducer:
     def __init__(
         self,
         bootstrap_servers: str,
-        topic: str,
         messages_per_second: int = 10,
         batch_size: int = 16384,
         linger_ms: int = 0
@@ -24,7 +23,7 @@ class RateLimitedKafkaProducer:
             batch_size: Maximum size of a batch in bytes
             linger_ms: Time to wait for more messages before sending a batch
         """
-        self.topic = topic
+        #self.topic = topic
         self.messages_per_second = messages_per_second
         self.last_send_time = 0
         self.message_count = 0
@@ -38,7 +37,7 @@ class RateLimitedKafkaProducer:
             acks='all',  # Wait for all replicas to acknowledge
             retries=3    # Retry failed sends
         )
-        print(f"Producer initialized for topic: {topic}")
+        #print(f"Producer initialized for topic: {topic}")
 
     def _wait_for_rate_limit(self) -> None:
         """
@@ -62,7 +61,8 @@ class RateLimitedKafkaProducer:
         self,
         message: Dict[str, Any],
         key: Optional[str] = None,
-        partition: Optional[int] = None
+        partition: Optional[int] = None,
+        topic: Optional[str] = None
     ) -> None:
         """
         Send a message to Kafka with rate limiting.
@@ -72,17 +72,17 @@ class RateLimitedKafkaProducer:
             key: Optional key for the message
             partition: Optional partition to send to
         """
-        self._wait_for_rate_limit()
+        #self._wait_for_rate_limit()
         
         # Add timestamp to message
         message['timestamp'] = datetime.now().isoformat()
         
         # Send the message
         future = self.producer.send(
-            self.topic,
+            topic=topic,
             value=message,
-            key=key.encode('utf-8') if key else None,
-            partition=partition
+            key=key.encode('utf-8') if key else None, # what happens if we don't encode
+            partition=partition #how do i decide which partition will send the message to
         )
         
         # Wait for the message to be delivered
