@@ -1,22 +1,10 @@
 from kafka_producer import RateLimitedKafkaProducer
-import json
-import random
-import time
 from flask import Flask,request,jsonify
 
 app = Flask(__name__)
 
 #TODO: write an efficient logger that captures the client-id as well.
 
-def generate_payment_data():
-    return {
-        "transaction_id": f"TXN{random.randint(100000, 999999)}",
-        "user_id": f"USER{random.randint(1000, 9999)}",
-        "amount": round(random.uniform(100, 10000), 2),
-        "currency": random.choice(["USD", "INR", "EUR", "GBP"]),
-        "payment_method": random.choice(["Credit Card", "Debit Card", "UPI", "PayPal"]),
-        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
-    }
 
 bootstrap_servers="localhost:9092"
 producer = RateLimitedKafkaProducer(bootstrap_servers=bootstrap_servers)

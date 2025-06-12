@@ -13,12 +13,12 @@ class DeliverySemantics(Enum):
 class KafkaMessageConsumer:
     def __init__(
         self,
-        topic: str,
+        #topic: str,
         bootstrap_servers: str,
         group_id: str,
         delivery_semantics: DeliverySemantics = DeliverySemantics.AT_LEAST_ONCE
     ):
-        self.topic = topic
+        #self.topic = topic
         self.delivery_semantics = delivery_semantics
         
         # Configure consumer based on delivery semantics
@@ -50,8 +50,8 @@ class KafkaMessageConsumer:
                 "isolation_level": "read_committed"  # Only read committed messages
             })
 
-        self.consumer = KafkaConsumer(**consumer_config)
-        print(f"Consumer initialized for topic: {topic} with {delivery_semantics.value} semantics")
+        self.consumer = KafkaConsumer("first_topic",**consumer_config)
+        print(f"Consumer initialized for {delivery_semantics.value} semantics")
 
     def process_message(self, message: Dict[str, Any]) -> None:
         """
@@ -64,18 +64,22 @@ class KafkaMessageConsumer:
         """
         Start consuming messages from Kafka with the configured delivery semantics.
         """
+        res=[]
         try:
             print(f"Starting to consume messages from topic: {topic}")
-            self.consumer.subscribe(topic) # will this step overwrite what topic i am reading previously.
+            # TODO: how do we handle the multiple topic names.
+            #self.consumer.subscribe(list(topic)) # will this step overwrite what topic i am reading previously.
             for message in self.consumer:
                 try:
                     if self.delivery_semantics == DeliverySemantics.AT_MOST_ONCE:
                         # Commit before processing to ensure at-most-once
                         self.consumer.commit()
-                        self.process_message(message.value)
+                        res.append(message.value)
+                        #self.process_message(message.value)
                     elif self.delivery_semantics == DeliverySemantics.AT_LEAST_ONCE:
                         # Process first, then commit (auto-commit will handle this)
-                        self.process_message(message.value)
+                        #self.process_message(message.value)
+                        res.append(message.value)
                     elif self.delivery_semantics == DeliverySemantics.EXACTLY_ONCE:
                         # For exactly-once, we need to:
                         # 1. Check if message was already processed (using message ID)
@@ -84,7 +88,8 @@ class KafkaMessageConsumer:
                         # 4. Commit the offset
                         message_id = message.headers.get('message_id', [b''])[0].decode()
                         if not self._is_message_processed(message_id):
-                            self.process_message(message.value)
+                            
+                            #self.process_message(message.value)
                             self._mark_message_processed(message_id)
                             self.consumer.commit()
                 except Exception as e:
@@ -93,6 +98,7 @@ class KafkaMessageConsumer:
                         # For at-least-once, we don't commit on error
                         # This ensures the message will be reprocessed
                         continue
+            return res
         except KeyboardInterrupt:
             print("Stopping consumer...")
         finally:

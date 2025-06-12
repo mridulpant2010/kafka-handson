@@ -1,7 +1,31 @@
 - cd C:\kafka_2.13-3.9.0
 - start zookeeper
   - .\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
-- start kafka
+- start kafka 
+  - .\bin\windows\kafka-server-start.bat .\config\server.properties
+
+.\bin\windows\kafka-topics.bat --describe --topic first_topic --bootstrap-server localhost:9092
+
+.\bin\windows\kafka-topics.bat --create --topic second_topic --replication-factor 2 --partitions 3 --bootstrap-server localhost:9092
+
+
+.\bin\windows\kafka-console-consumer.bat --from-beginning --topic first_topic --property print.key=true--property key.separator=":" --bootstrap-server localhost:9092
+
+
+# create a new topic
+.\bin\windows\kafka-topics.bat --create --topic products.prices.changelog.multi-partitions --partitions 2 --replication-factor 1 --bootstrap-server localhost:9092
+
+# kafka  producer
+.\bin\windows\kafka-console-producer.bat --topic products.prices.changelog.multi-partitions --bootstrap-server localhost:9092 --property parse.key=true --property key.separator=:
+
+
+# console consumer
+.\bin\windows\kafka-console-consumer.bat --from-beginning --topic products.prices.changelog.multi-partitions --property print.partition=true --property print.key=true --bootstrap-server localhost:9092
+
+# describe topic 
+.\bin\windows\kafka-topics.bat --describe --topic products.prices.changelog.multi-partitions --bootstrap-server localhost:9092 
+ ^
+--property print.partition=true
 
 
 ## develop a scenario to handle the backpressure in kafka?
